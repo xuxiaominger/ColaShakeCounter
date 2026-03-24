@@ -1,6 +1,6 @@
 package com.colashake.counter;
 
-import android.app.Activity;
+import androidx.appcompat.app.AppCompatActivity;
 import android.hardware.Sensor;
 import android.hardware.SensorManager;
 import android.os.Build;
@@ -13,7 +13,7 @@ import android.view.WindowInsetsController;
 import android.view.WindowManager;
 import android.widget.TextView;
 
-public class MainActivity extends Activity {
+public class MainActivity extends AppCompatActivity {
 
     private SensorManager sensorManager;
     private Sensor accelerometer;

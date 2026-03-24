@@ -182,8 +182,19 @@ public class MainActivity extends AppCompatActivity implements SensorEventListen
     protected void onResume() {
         super.onResume();
         if (sensorManager != null && accelerometer != null) {
-            sensorManager.registerListener(this, accelerometer,
-                    SensorManager.SENSOR_DELAY_GAME);
+            try {
+                // Use SENSOR_DELAY_UI for better compatibility with Xiaomi/MIUI
+                sensorManager.registerListener(this, accelerometer,
+                        SensorManager.SENSOR_DELAY_UI);
+            } catch (Exception e) {
+                // Fallback: try with normal delay
+                try {
+                    sensorManager.registerListener(this, accelerometer,
+                            SensorManager.SENSOR_DELAY_NORMAL);
+                } catch (Exception ex) {
+                    // Ignore sensor errors
+                }
+            }
         }
         // Re-apply fullscreen on resume
         setupFullscreen();

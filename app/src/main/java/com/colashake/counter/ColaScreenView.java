@@ -117,13 +117,15 @@ public class ColaScreenView extends View {
     }
 
     private void initBubbles() {
+        if (bubbleX == null || viewWidth == 0 || viewHeight == 0) return;
         for (int i = 0; i < BUBBLE_COUNT; i++) {
             resetBubble(i, true);
         }
     }
 
     private void resetBubble(int i, boolean randomY) {
-        bubbleX[i] = (float) Math.random() * viewWidth;
+        if (bubbleX == null || viewWidth == 0 || viewHeight == 0) return;
+        bubbleX[i] = (float) Math.random() * Math.max(1, viewWidth);
         bubbleY[i] = randomY ?
                 (viewHeight * (1 - liquidLevel) + (float) Math.random() * viewHeight * liquidLevel) :
                 viewHeight + 10;
@@ -177,7 +179,9 @@ public class ColaScreenView extends View {
     @Override
     protected void onDraw(Canvas canvas) {
         super.onDraw(canvas);
-        if (viewWidth == 0 || viewHeight == 0) return;
+        if (viewWidth == 0 || viewHeight == 0 || canvas == null) return;
+
+        try {
 
         // Calculate time delta
         long currentTime = System.currentTimeMillis();
@@ -211,6 +215,9 @@ public class ColaScreenView extends View {
 
         // Request next frame
         postInvalidateOnAnimation();
+        } catch (Exception e) {
+            // Ignore drawing errors
+        }
     }
 
     private void drawColaLiquid(Canvas canvas) {

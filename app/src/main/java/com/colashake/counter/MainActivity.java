@@ -4,6 +4,8 @@ import android.hardware.Sensor;
 import android.hardware.SensorEvent;
 import android.hardware.SensorEventListener;
 import android.hardware.SensorManager;
+import android.media.AudioAttributes;
+import android.media.SoundPool;
 import android.os.Build;
 import android.os.Bundle;
 import android.os.VibrationEffect;
@@ -27,7 +29,6 @@ public class MainActivity extends AppCompatActivity implements SensorEventListen
 
     private TextView counterText;
     private ColaScreenView colaScreenView;
-    private AnimeGirlView animeGirlView;
     private int shakeCount = 0;
 
     // Shake detection
@@ -40,6 +41,14 @@ public class MainActivity extends AppCompatActivity implements SensorEventListen
     private static final long VIBRATION_INTERVAL = 50; // ms between vibrations
     private float currentIntensity = 0f;
 
+    // Sound
+    private SoundPool soundPool;
+    private int waterSoundId = -1;
+    private int streamId = -1;
+    private boolean soundLoaded = false;
+    private long lastSoundTime = 0;
+    private static final long SOUND_INTERVAL = 100; // ms between sound updates
+
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -51,7 +60,6 @@ public class MainActivity extends AppCompatActivity implements SensorEventListen
 
         counterText = findViewById(R.id.counterText);
         colaScreenView = findViewById(R.id.colaScreenView);
-        animeGirlView = findViewById(R.id.animeGirlView);
 
         // Setup sensor
         sensorManager = (SensorManager) getSystemService(SENSOR_SERVICE);
@@ -69,8 +77,35 @@ public class MainActivity extends AppCompatActivity implements SensorEventListen
             vibrator = (Vibrator) getSystemService(VIBRATOR_SERVICE);
         }
 
+        // Setup sound pool for water sound
+        setupSound();
+
         // Keep screen on
         getWindow().addFlags(WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON);
+    }
+
+    private void setupSound() {
+        try {
+            AudioAttributes audioAttributes = new AudioAttributes.Builder()
+                    .setUsage(AudioAttributes.USAGE_GAME)
+                    .setContentType(AudioAttributes.CONTENT_TYPE_SONIFICATION)
+                    .build();
+
+            soundPool = new SoundPool.Builder()
+                    .setMaxStreams(2)
+                    .setAudioAttributes(audioAttributes)
+                    .build();
+
+            soundPool.setOnLoadCompleteListener((sp, sampleId, status) -> {
+                if (status == 0) {
+                    soundLoaded = true;
+                }
+            });
+
+            waterSoundId = soundPool.load(this, R.raw.water_shake, 1);
+        } catch (Exception e) {
+            // Ignore sound setup errors
+        }
     }
 
     private void setupFullscreen() {
@@ -113,6 +148,9 @@ public class MainActivity extends AppCompatActivity implements SensorEventListen
         // Variable vibration based on intensity
         vibrateWithIntensity(intensity);
 
+        // Play water sound based on intensity
+        playWaterSound(intensity);
+
         // Detect shake for counter
         long currentTime = System.currentTimeMillis();
         if (intensity > SHAKE_THRESHOLD && (currentTime - lastShakeTime) > SHAKE_COOLDOWN) {
@@ -128,10 +166,50 @@ public class MainActivity extends AppCompatActivity implements SensorEventListen
             if (colaScreenView != null) {
                 colaScreenView.onShake();
             }
-            if (animeGirlView != null) {
-                animeGirlView.onShake();
-            }
         });
+    }
+
+    private void playWaterSound(float intensity) {
+        if (soundPool == null || !soundLoaded || waterSoundId == -1) return;
+
+        long currentTime = System.currentTimeMillis();
+        if ((currentTime - lastSoundTime) < SOUND_INTERVAL) return;
+
+        // Only play sound if there's significant movement
+        if (intensity < 2f) {
+            // Stop sound when not shaking
+            if (streamId != -1) {
+                try {
+                    soundPool.stop(streamId);
+                    streamId = -1;
+                } catch (Exception e) {
+                    // Ignore
+                }
+            }
+            return;
+        }
+
+        lastSoundTime = currentTime;
+
+        try {
+            // Calculate volume based on intensity (0.0 to 1.0)
+            float volume = Math.min(intensity / 15f, 1f);
+            volume = Math.max(0.3f, volume); // Minimum volume 0.3
+
+            // Calculate playback rate based on intensity (0.8 to 1.5)
+            float rate = 0.8f + (intensity / 20f);
+            rate = Math.min(1.5f, Math.max(0.8f, rate));
+
+            // Play or update sound
+            if (streamId == -1) {
+                streamId = soundPool.play(waterSoundId, volume, volume, 1, -1, rate);
+            } else {
+                soundPool.setVolume(streamId, volume, volume);
+                soundPool.setRate(streamId, rate);
+            }
+        } catch (Exception e) {
+            // Ignore sound errors
+        }
     }
 
     private void vibrateWithIntensity(float intensity) {
@@ -205,6 +283,28 @@ public class MainActivity extends AppCompatActivity implements SensorEventListen
         super.onPause();
         if (sensorManager != null) {
             sensorManager.unregisterListener(this);
+        }
+        // Stop sound when paused
+        if (soundPool != null && streamId != -1) {
+            try {
+                soundPool.stop(streamId);
+                streamId = -1;
+            } catch (Exception e) {
+                // Ignore
+            }
+        }
+    }
+
+    @Override
+    protected void onDestroy() {
+        super.onDestroy();
+        if (soundPool != null) {
+            try {
+                soundPool.release();
+                soundPool = null;
+            } catch (Exception e) {
+                // Ignore
+            }
         }
     }
 }

@@ -25,7 +25,8 @@ public class MainActivity extends AppCompatActivity {
     private Vibrator vibrator;
 
     private TextView counterText;
-    private ColaGlassView colaGlassView;
+    private ColaBottleView colaBottleView;
+    private AnimeGirlView animeGirlView;
     private int shakeCount = 0;
 
     @Override
@@ -38,7 +39,8 @@ public class MainActivity extends AppCompatActivity {
         setContentView(R.layout.activity_main);
 
         counterText = findViewById(R.id.counterText);
-        colaGlassView = findViewById(R.id.colaGlassView);
+        colaBottleView = findViewById(R.id.colaBottleView);
+        animeGirlView = findViewById(R.id.animeGirlView);
 
         // Setup sensor
         sensorManager = (SensorManager) getSystemService(SENSOR_SERVICE);
@@ -51,7 +53,8 @@ public class MainActivity extends AppCompatActivity {
         shakeDetector.setOnShakeListener(() -> runOnUiThread(() -> {
             shakeCount++;
             counterText.setText(String.valueOf(shakeCount));
-            colaGlassView.onShake();
+            colaBottleView.onShake();
+            animeGirlView.onShake();
             vibrateShort();
         }));
 

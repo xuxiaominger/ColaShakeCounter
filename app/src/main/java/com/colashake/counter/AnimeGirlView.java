@@ -13,29 +13,42 @@ import android.util.AttributeSet;
 import android.view.View;
 import android.view.animation.LinearInterpolator;
 
+/**
+ * Anime girl view inspired by Umaru-chan style
+ * - Orange hamster hoodie with ears
+ * - Big chibi head
+ * - Large expressive eyes
+ * - Happy expression
+ */
 public class AnimeGirlView extends View {
 
     private Paint skinPaint;
     private Paint hairPaint;
     private Paint hairHighlightPaint;
-    private Paint eyePaint;
+    private Paint hoodiePaint;
+    private Paint hoodieDetailPaint;
+    private Paint hoodieShadowPaint;
     private Paint eyeWhitePaint;
+    private Paint eyeIrisPaint;
+    private Paint eyePupilPaint;
     private Paint eyeHighlightPaint;
     private Paint mouthPaint;
     private Paint blushPaint;
-    private Paint dressPaint;
-    private Paint dressDetailPaint;
+    private Paint hamsterFacePaint;
+    private Paint hamsterEyePaint;
 
     private float bounceOffset = 0f;
-    private float blinkTimer = 0f;
-    private boolean isBlinking = false;
+    private float armWaveOffset = 0f;
+    private boolean isExcited = false;
+    private float excitedTimer = 0f;
+
     private ValueAnimator bounceAnimator;
 
     private int viewWidth;
     private int viewHeight;
 
     private float centerX;
-    private float girlTop;
+    private float girlScale;
 
     public AnimeGirlView(Context context) {
         super(context);
@@ -53,29 +66,45 @@ public class AnimeGirlView extends View {
     }
 
     private void init() {
-        // Skin
+        // Skin - peachy tone
         skinPaint = new Paint(Paint.ANTI_ALIAS_FLAG);
-        skinPaint.setColor(Color.rgb(255, 224, 210));
+        skinPaint.setColor(Color.rgb(255, 228, 215));
         skinPaint.setStyle(Paint.Style.FILL);
 
-        // Hair (dark brown/black)
+        // Hair - orange/light brown like Umaru
         hairPaint = new Paint(Paint.ANTI_ALIAS_FLAG);
-        hairPaint.setColor(Color.rgb(50, 30, 20));
+        hairPaint.setColor(Color.rgb(235, 160, 90));
         hairPaint.setStyle(Paint.Style.FILL);
 
-        // Hair highlight
         hairHighlightPaint = new Paint(Paint.ANTI_ALIAS_FLAG);
-        hairHighlightPaint.setColor(Color.rgb(80, 50, 35));
+        hairHighlightPaint.setColor(Color.rgb(255, 200, 130));
         hairHighlightPaint.setStyle(Paint.Style.FILL);
 
-        // Eyes
-        eyePaint = new Paint(Paint.ANTI_ALIAS_FLAG);
-        eyePaint.setColor(Color.rgb(100, 60, 40));
-        eyePaint.setStyle(Paint.Style.FILL);
+        // Hoodie - orange hamster hoodie
+        hoodiePaint = new Paint(Paint.ANTI_ALIAS_FLAG);
+        hoodiePaint.setColor(Color.rgb(230, 140, 60));
+        hoodiePaint.setStyle(Paint.Style.FILL);
 
+        hoodieDetailPaint = new Paint(Paint.ANTI_ALIAS_FLAG);
+        hoodieDetailPaint.setColor(Color.rgb(250, 180, 100));
+        hoodieDetailPaint.setStyle(Paint.Style.FILL);
+
+        hoodieShadowPaint = new Paint(Paint.ANTI_ALIAS_FLAG);
+        hoodieShadowPaint.setColor(Color.rgb(200, 110, 40));
+        hoodieShadowPaint.setStyle(Paint.Style.FILL);
+
+        // Eyes
         eyeWhitePaint = new Paint(Paint.ANTI_ALIAS_FLAG);
         eyeWhitePaint.setColor(Color.WHITE);
         eyeWhitePaint.setStyle(Paint.Style.FILL);
+
+        eyeIrisPaint = new Paint(Paint.ANTI_ALIAS_FLAG);
+        eyeIrisPaint.setColor(Color.rgb(180, 100, 60));
+        eyeIrisPaint.setStyle(Paint.Style.FILL);
+
+        eyePupilPaint = new Paint(Paint.ANTI_ALIAS_FLAG);
+        eyePupilPaint.setColor(Color.rgb(60, 30, 20));
+        eyePupilPaint.setStyle(Paint.Style.FILL);
 
         eyeHighlightPaint = new Paint(Paint.ANTI_ALIAS_FLAG);
         eyeHighlightPaint.setColor(Color.WHITE);
@@ -83,36 +112,37 @@ public class AnimeGirlView extends View {
 
         // Mouth
         mouthPaint = new Paint(Paint.ANTI_ALIAS_FLAG);
-        mouthPaint.setColor(Color.rgb(220, 120, 120));
+        mouthPaint.setColor(Color.rgb(200, 80, 80));
         mouthPaint.setStyle(Paint.Style.FILL);
 
         // Blush
         blushPaint = new Paint(Paint.ANTI_ALIAS_FLAG);
-        blushPaint.setColor(Color.argb(80, 255, 150, 150));
+        blushPaint.setColor(Color.argb(100, 255, 150, 150));
         blushPaint.setStyle(Paint.Style.FILL);
 
-        // Dress (cute pink/red)
-        dressPaint = new Paint(Paint.ANTI_ALIAS_FLAG);
-        dressPaint.setColor(Color.rgb(230, 80, 100));
-        dressPaint.setStyle(Paint.Style.FILL);
+        // Hamster face on hoodie
+        hamsterFacePaint = new Paint(Paint.ANTI_ALIAS_FLAG);
+        hamsterFacePaint.setColor(Color.rgb(250, 200, 150));
+        hamsterFacePaint.setStyle(Paint.Style.FILL);
 
-        dressDetailPaint = new Paint(Paint.ANTI_ALIAS_FLAG);
-        dressDetailPaint.setColor(Color.rgb(255, 200, 200));
-        dressDetailPaint.setStyle(Paint.Style.FILL);
+        hamsterEyePaint = new Paint(Paint.ANTI_ALIAS_FLAG);
+        hamsterEyePaint.setColor(Color.rgb(40, 20, 10));
+        hamsterEyePaint.setStyle(Paint.Style.FILL);
 
-        // Bounce animation
+        // Animation
         bounceAnimator = ValueAnimator.ofFloat(0f, (float) (2 * Math.PI));
-        bounceAnimator.setDuration(2000);
+        bounceAnimator.setDuration(1500);
         bounceAnimator.setRepeatCount(ValueAnimator.INFINITE);
         bounceAnimator.setInterpolator(new LinearInterpolator());
         bounceAnimator.addUpdateListener(animation -> {
             bounceOffset = (float) animation.getAnimatedValue();
-            blinkTimer += 0.05f;
-            if (blinkTimer > 4f) {
-                isBlinking = true;
-                if (blinkTimer > 4.15f) {
-                    isBlinking = false;
-                    blinkTimer = 0f;
+            armWaveOffset += 0.15f;
+
+            if (isExcited) {
+                excitedTimer += 0.1f;
+                if (excitedTimer > 2f) {
+                    isExcited = false;
+                    excitedTimer = 0f;
                 }
             }
             invalidate();
@@ -125,8 +155,10 @@ public class AnimeGirlView extends View {
         super.onSizeChanged(w, h, oldw, oldh);
         viewWidth = w;
         viewHeight = h;
-        centerX = w * 0.28f;
-        girlTop = h * 0.25f;
+
+        // Position in bottom-left area as background
+        centerX = w * 0.22f;
+        girlScale = Math.min(w, h) * 0.0012f;
     }
 
     @Override
@@ -134,269 +166,265 @@ public class AnimeGirlView extends View {
         super.onDraw(canvas);
         if (viewWidth == 0 || viewHeight == 0) return;
 
-        float bounce = (float) Math.sin(bounceOffset) * 8;
-        float baseY = girlTop + bounce;
+        float bounce = (float) Math.sin(bounceOffset) * 6 * girlScale;
+        float baseY = viewHeight * 0.45f + bounce;
 
-        drawHairBack(canvas, baseY);
-        drawBody(canvas, baseY);
-        drawArm(canvas, baseY);
-        drawHead(canvas, baseY);
-        drawHairFront(canvas, baseY);
-        drawFace(canvas, baseY);
+        float scale = girlScale * 100;
+
+        canvas.save();
+        canvas.translate(centerX, baseY);
+        canvas.scale(scale / 100f, scale / 100f);
+
+        drawHoodieBack(canvas);
+        drawBody(canvas);
+        drawArms(canvas);
+        drawHead(canvas);
+        drawHoodie(canvas);
+        drawFace(canvas);
+        drawHoodieEars(canvas);
+        drawHamsterOnHood(canvas);
+
+        canvas.restore();
     }
 
-    private void drawHairBack(Canvas canvas, float baseY) {
-        float headCenterX = centerX;
-        float headRadius = viewWidth * 0.12f;
-        float headY = baseY + headRadius;
-
-        // Long hair at back
-        Path hairPath = new Path();
-        hairPath.moveTo(headCenterX - headRadius * 1.1f, headY);
-        hairPath.quadTo(headCenterX - headRadius * 1.3f, headY + headRadius * 2.5f,
-                headCenterX - headRadius * 0.5f, headY + headRadius * 3.5f);
-        hairPath.lineTo(headCenterX + headRadius * 0.5f, headY + headRadius * 3.5f);
-        hairPath.quadTo(headCenterX + headRadius * 1.3f, headY + headRadius * 2.5f,
-                headCenterX + headRadius * 1.1f, headY);
-        hairPath.close();
-        canvas.drawPath(hairPath, hairPaint);
+    private void drawHoodieBack(Canvas canvas) {
+        // Back of hoodie visible behind
+        Path backPath = new Path();
+        backPath.moveTo(-60, 80);
+        backPath.quadTo(-70, 150, -50, 220);
+        backPath.lineTo(50, 220);
+        backPath.quadTo(70, 150, 60, 80);
+        backPath.close();
+        canvas.drawPath(backPath, hoodieShadowPaint);
     }
 
-    private void drawBody(Canvas canvas, float baseY) {
-        float headRadius = viewWidth * 0.12f;
-        float bodyTop = baseY + headRadius * 2.2f;
-        float bodyWidth = headRadius * 1.4f;
-
-        // Dress body
-        Path dressPath = new Path();
-        dressPath.moveTo(centerX - bodyWidth * 0.4f, bodyTop);
-        dressPath.lineTo(centerX - bodyWidth * 0.7f, bodyTop + headRadius * 2.5f);
-        dressPath.quadTo(centerX, bodyTop + headRadius * 2.8f,
-                centerX + bodyWidth * 0.7f, bodyTop + headRadius * 2.5f);
-        dressPath.lineTo(centerX + bodyWidth * 0.4f, bodyTop);
-        dressPath.close();
-        canvas.drawPath(dressPath, dressPaint);
-
-        // Dress ribbon
-        float ribbonY = bodyTop + headRadius * 0.3f;
-        canvas.drawCircle(centerX, ribbonY, headRadius * 0.15f, dressDetailPaint);
-
-        // Collar
-        Path collarPath = new Path();
-        collarPath.moveTo(centerX - bodyWidth * 0.3f, bodyTop - 5);
-        collarPath.lineTo(centerX, bodyTop + headRadius * 0.4f);
-        collarPath.lineTo(centerX + bodyWidth * 0.3f, bodyTop - 5);
-        canvas.drawPath(collarPath, Color.WHITE == 0 ? dressPaint : new Paint() {{
-            setColor(Color.WHITE);
-            setStyle(Paint.Style.FILL);
-            setAntiAlias(true);
-        }});
+    private void drawBody(Canvas canvas) {
+        // Body in hoodie
+        Path bodyPath = new Path();
+        bodyPath.moveTo(-45, 90);
+        bodyPath.lineTo(-55, 200);
+        bodyPath.quadTo(0, 220, 55, 200);
+        bodyPath.lineTo(45, 90);
+        bodyPath.close();
+        canvas.drawPath(bodyPath, hoodiePaint);
     }
 
-    private void drawArm(Canvas canvas, float baseY) {
-        float headRadius = viewWidth * 0.12f;
-        float bodyTop = baseY + headRadius * 2.2f;
+    private void drawArms(Canvas canvas) {
+        // Left arm (waving when excited)
+        float leftArmAngle = isExcited ? (float) Math.sin(armWaveOffset * 3) * 20 : 0;
 
-        // Right arm holding something (toward bottle)
-        Paint armPaint = new Paint(Paint.ANTI_ALIAS_FLAG);
-        armPaint.setColor(Color.rgb(255, 224, 210));
-        armPaint.setStyle(Paint.Style.FILL);
+        canvas.save();
+        canvas.rotate(leftArmAngle, -50, 110);
 
-        Path armPath = new Path();
-        float armStartX = centerX + headRadius * 0.5f;
-        float armStartY = bodyTop + headRadius * 0.3f;
-        float armEndX = centerX + headRadius * 2.2f;
-        float armEndY = bodyTop + headRadius * 0.8f;
+        Path leftArmPath = new Path();
+        leftArmPath.moveTo(-50, 100);
+        leftArmPath.quadTo(-85, 130, -80, 170);
+        leftArmPath.quadTo(-75, 180, -65, 175);
+        leftArmPath.quadTo(-55, 150, -40, 120);
+        leftArmPath.close();
+        canvas.drawPath(leftArmPath, hoodiePaint);
 
-        // Upper arm
-        armPath.moveTo(armStartX, armStartY);
-        armPath.quadTo(armStartX + headRadius * 0.8f, armStartY + headRadius * 0.2f,
-                armEndX - headRadius * 0.3f, armEndY);
-        armPath.quadTo(armEndX, armEndY + headRadius * 0.15f,
-                armEndX - headRadius * 0.3f, armEndY + headRadius * 0.3f);
-        armPath.quadTo(armStartX + headRadius * 0.5f, armStartY + headRadius * 0.5f,
-                armStartX, armStartY + headRadius * 0.4f);
-        armPath.close();
+        // Left hand
+        canvas.drawCircle(-75, 175, 12, skinPaint);
 
-        // Sleeve
-        dressPaint.setColor(Color.rgb(230, 80, 100));
-        canvas.drawCircle(armStartX + headRadius * 0.1f, armStartY + headRadius * 0.15f,
-                headRadius * 0.25f, dressPaint);
+        canvas.restore();
 
-        canvas.drawPath(armPath, armPaint);
+        // Right arm (raised up when excited)
+        float rightArmRaise = isExcited ? -30 + (float) Math.sin(armWaveOffset * 4) * 15 : 0;
 
-        // Hand
-        canvas.drawCircle(armEndX - headRadius * 0.1f, armEndY + headRadius * 0.1f,
-                headRadius * 0.18f, armPaint);
+        canvas.save();
+        canvas.rotate(rightArmRaise, 50, 110);
+
+        Path rightArmPath = new Path();
+        rightArmPath.moveTo(50, 100);
+        rightArmPath.quadTo(85, 130, 80, 170);
+        rightArmPath.quadTo(75, 180, 65, 175);
+        rightArmPath.quadTo(55, 150, 40, 120);
+        rightArmPath.close();
+        canvas.drawPath(rightArmPath, hoodiePaint);
+
+        // Right hand
+        canvas.drawCircle(75, 175, 12, skinPaint);
+
+        canvas.restore();
     }
 
-    private void drawHead(Canvas canvas, float baseY) {
-        float headCenterX = centerX;
-        float headRadius = viewWidth * 0.12f;
-        float headY = baseY + headRadius;
-
-        // Face
-        canvas.drawCircle(headCenterX, headY, headRadius, skinPaint);
+    private void drawHead(Canvas canvas) {
+        // Big chibi head
+        canvas.drawOval(new RectF(-55, -55, 55, 55), skinPaint);
     }
 
-    private void drawHairFront(Canvas canvas, float baseY) {
-        float headCenterX = centerX;
-        float headRadius = viewWidth * 0.12f;
-        float headY = baseY + headRadius;
+    private void drawHoodie(Canvas canvas) {
+        // Hoodie covering top of head
+        Path hoodiePath = new Path();
+        hoodiePath.moveTo(-58, 10);
+        hoodiePath.quadTo(-65, -30, -50, -55);
+        hoodiePath.quadTo(-30, -75, 0, -78);
+        hoodiePath.quadTo(30, -75, 50, -55);
+        hoodiePath.quadTo(65, -30, 58, 10);
+        hoodiePath.quadTo(40, 25, 0, 28);
+        hoodiePath.quadTo(-40, 25, -58, 10);
+        hoodiePath.close();
+        canvas.drawPath(hoodiePath, hoodiePaint);
 
-        // Bangs
-        Path bangsPath = new Path();
-        bangsPath.moveTo(headCenterX - headRadius * 1.05f, headY - headRadius * 0.2f);
+        // Hoodie edge (lighter color)
+        Path edgePath = new Path();
+        edgePath.moveTo(-55, 8);
+        edgePath.quadTo(-35, 22, 0, 25);
+        edgePath.quadTo(35, 22, 55, 8);
 
-        // Left bang
-        bangsPath.quadTo(headCenterX - headRadius * 0.7f, headY + headRadius * 0.3f,
-                headCenterX - headRadius * 0.5f, headY - headRadius * 0.1f);
-
-        // Middle bangs
-        bangsPath.quadTo(headCenterX - headRadius * 0.25f, headY + headRadius * 0.35f,
-                headCenterX, headY - headRadius * 0.05f);
-        bangsPath.quadTo(headCenterX + headRadius * 0.25f, headY + headRadius * 0.35f,
-                headCenterX + headRadius * 0.5f, headY - headRadius * 0.1f);
-
-        // Right bang
-        bangsPath.quadTo(headCenterX + headRadius * 0.7f, headY + headRadius * 0.3f,
-                headCenterX + headRadius * 1.05f, headY - headRadius * 0.2f);
-
-        // Top of head
-        bangsPath.quadTo(headCenterX + headRadius * 0.8f, headY - headRadius * 1.1f,
-                headCenterX, headY - headRadius * 1.15f);
-        bangsPath.quadTo(headCenterX - headRadius * 0.8f, headY - headRadius * 1.1f,
-                headCenterX - headRadius * 1.05f, headY - headRadius * 0.2f);
-
-        canvas.drawPath(bangsPath, hairPaint);
-
-        // Hair highlight
-        Path highlightPath = new Path();
-        highlightPath.moveTo(headCenterX - headRadius * 0.3f, headY - headRadius * 0.8f);
-        highlightPath.quadTo(headCenterX, headY - headRadius * 0.6f,
-                headCenterX + headRadius * 0.2f, headY - headRadius * 0.85f);
-        highlightPath.quadTo(headCenterX, headY - headRadius * 0.75f,
-                headCenterX - headRadius * 0.3f, headY - headRadius * 0.8f);
-        canvas.drawPath(highlightPath, hairHighlightPaint);
-
-        // Side hair
-        Path sideHairLeft = new Path();
-        sideHairLeft.moveTo(headCenterX - headRadius * 1.05f, headY - headRadius * 0.2f);
-        sideHairLeft.quadTo(headCenterX - headRadius * 1.4f, headY + headRadius * 0.5f,
-                headCenterX - headRadius * 1.1f, headY + headRadius * 1.5f);
-        sideHairLeft.lineTo(headCenterX - headRadius * 0.85f, headY + headRadius * 1.4f);
-        sideHairLeft.quadTo(headCenterX - headRadius * 1.1f, headY + headRadius * 0.5f,
-                headCenterX - headRadius * 0.95f, headY);
-        canvas.drawPath(sideHairLeft, hairPaint);
-
-        Path sideHairRight = new Path();
-        sideHairRight.moveTo(headCenterX + headRadius * 1.05f, headY - headRadius * 0.2f);
-        sideHairRight.quadTo(headCenterX + headRadius * 1.4f, headY + headRadius * 0.5f,
-                headCenterX + headRadius * 1.1f, headY + headRadius * 1.5f);
-        sideHairRight.lineTo(headCenterX + headRadius * 0.85f, headY + headRadius * 1.4f);
-        sideHairRight.quadTo(headCenterX + headRadius * 1.1f, headY + headRadius * 0.5f,
-                headCenterX + headRadius * 0.95f, headY);
-        canvas.drawPath(sideHairRight, hairPaint);
+        Paint edgePaint = new Paint(Paint.ANTI_ALIAS_FLAG);
+        edgePaint.setColor(Color.rgb(250, 180, 100));
+        edgePaint.setStyle(Paint.Style.STROKE);
+        edgePaint.setStrokeWidth(5);
+        canvas.drawPath(edgePath, edgePaint);
     }
 
-    private void drawFace(Canvas canvas, float baseY) {
-        float headCenterX = centerX;
-        float headRadius = viewWidth * 0.12f;
-        float headY = baseY + headRadius;
+    private void drawFace(Canvas canvas) {
+        float eyeY = 0;
+        float eyeSpacing = 28;
+        float eyeWidth = 18;
+        float eyeHeight = 22;
 
-        float eyeY = headY + headRadius * 0.05f;
-        float eyeSpacing = headRadius * 0.45f;
-        float eyeWidth = headRadius * 0.28f;
-        float eyeHeight = headRadius * 0.35f;
+        // Big anime eyes
+        // Left eye
+        RectF leftEyeRect = new RectF(-eyeSpacing - eyeWidth, eyeY - eyeHeight,
+                -eyeSpacing + eyeWidth, eyeY + eyeHeight);
+        canvas.drawOval(leftEyeRect, eyeWhitePaint);
 
-        // Eyes
-        if (!isBlinking) {
-            // Left eye white
-            RectF leftEyeRect = new RectF(
-                    headCenterX - eyeSpacing - eyeWidth,
-                    eyeY - eyeHeight,
-                    headCenterX - eyeSpacing + eyeWidth,
-                    eyeY + eyeHeight
-            );
-            canvas.drawOval(leftEyeRect, eyeWhitePaint);
+        // Left iris
+        canvas.drawCircle(-eyeSpacing, eyeY + 2, eyeWidth * 0.75f, eyeIrisPaint);
 
-            // Left eye iris
-            canvas.drawCircle(headCenterX - eyeSpacing, eyeY, eyeWidth * 0.7f, eyePaint);
+        // Left pupil
+        canvas.drawCircle(-eyeSpacing, eyeY + 4, eyeWidth * 0.4f, eyePupilPaint);
 
-            // Left eye highlight
-            canvas.drawCircle(headCenterX - eyeSpacing - eyeWidth * 0.25f,
-                    eyeY - eyeHeight * 0.3f, eyeWidth * 0.25f, eyeHighlightPaint);
-            canvas.drawCircle(headCenterX - eyeSpacing + eyeWidth * 0.15f,
-                    eyeY + eyeHeight * 0.2f, eyeWidth * 0.12f, eyeHighlightPaint);
+        // Left highlights
+        canvas.drawCircle(-eyeSpacing - 6, eyeY - 6, 6, eyeHighlightPaint);
+        canvas.drawCircle(-eyeSpacing + 4, eyeY + 6, 3, eyeHighlightPaint);
 
-            // Right eye white
-            RectF rightEyeRect = new RectF(
-                    headCenterX + eyeSpacing - eyeWidth,
-                    eyeY - eyeHeight,
-                    headCenterX + eyeSpacing + eyeWidth,
-                    eyeY + eyeHeight
-            );
-            canvas.drawOval(rightEyeRect, eyeWhitePaint);
+        // Right eye
+        RectF rightEyeRect = new RectF(eyeSpacing - eyeWidth, eyeY - eyeHeight,
+                eyeSpacing + eyeWidth, eyeY + eyeHeight);
+        canvas.drawOval(rightEyeRect, eyeWhitePaint);
 
-            // Right eye iris
-            canvas.drawCircle(headCenterX + eyeSpacing, eyeY, eyeWidth * 0.7f, eyePaint);
+        // Right iris
+        canvas.drawCircle(eyeSpacing, eyeY + 2, eyeWidth * 0.75f, eyeIrisPaint);
 
-            // Right eye highlight
-            canvas.drawCircle(headCenterX + eyeSpacing - eyeWidth * 0.25f,
-                    eyeY - eyeHeight * 0.3f, eyeWidth * 0.25f, eyeHighlightPaint);
-            canvas.drawCircle(headCenterX + eyeSpacing + eyeWidth * 0.15f,
-                    eyeY + eyeHeight * 0.2f, eyeWidth * 0.12f, eyeHighlightPaint);
+        // Right pupil
+        canvas.drawCircle(eyeSpacing, eyeY + 4, eyeWidth * 0.4f, eyePupilPaint);
+
+        // Right highlights
+        canvas.drawCircle(eyeSpacing - 6, eyeY - 6, 6, eyeHighlightPaint);
+        canvas.drawCircle(eyeSpacing + 4, eyeY + 6, 3, eyeHighlightPaint);
+
+        // Blush marks
+        canvas.drawOval(new RectF(-50, 15, -30, 28), blushPaint);
+        canvas.drawOval(new RectF(30, 15, 50, 28), blushPaint);
+
+        // Mouth - big happy smile when excited, normal smile otherwise
+        if (isExcited) {
+            // Open happy mouth
+            Path mouthPath = new Path();
+            mouthPath.moveTo(-15, 32);
+            mouthPath.quadTo(0, 50, 15, 32);
+            mouthPath.quadTo(0, 42, -15, 32);
+            canvas.drawPath(mouthPath, mouthPaint);
+
+            // Tongue hint
+            Paint tonguePaint = new Paint(Paint.ANTI_ALIAS_FLAG);
+            tonguePaint.setColor(Color.rgb(255, 150, 150));
+            canvas.drawOval(new RectF(-6, 38, 6, 46), tonguePaint);
         } else {
-            // Closed eyes (happy expression)
-            Paint closedEyePaint = new Paint(Paint.ANTI_ALIAS_FLAG);
-            closedEyePaint.setColor(Color.rgb(50, 30, 20));
-            closedEyePaint.setStyle(Paint.Style.STROKE);
-            closedEyePaint.setStrokeWidth(3f);
-            closedEyePaint.setStrokeCap(Paint.Cap.ROUND);
+            // Cute small smile
+            Path mouthPath = new Path();
+            mouthPath.moveTo(-12, 35);
+            mouthPath.quadTo(0, 45, 12, 35);
 
-            Path leftClosedEye = new Path();
-            leftClosedEye.moveTo(headCenterX - eyeSpacing - eyeWidth, eyeY);
-            leftClosedEye.quadTo(headCenterX - eyeSpacing, eyeY + eyeHeight * 0.5f,
-                    headCenterX - eyeSpacing + eyeWidth, eyeY);
-            canvas.drawPath(leftClosedEye, closedEyePaint);
-
-            Path rightClosedEye = new Path();
-            rightClosedEye.moveTo(headCenterX + eyeSpacing - eyeWidth, eyeY);
-            rightClosedEye.quadTo(headCenterX + eyeSpacing, eyeY + eyeHeight * 0.5f,
-                    headCenterX + eyeSpacing + eyeWidth, eyeY);
-            canvas.drawPath(rightClosedEye, closedEyePaint);
+            Paint smilePaint = new Paint(Paint.ANTI_ALIAS_FLAG);
+            smilePaint.setColor(Color.rgb(180, 80, 80));
+            smilePaint.setStyle(Paint.Style.STROKE);
+            smilePaint.setStrokeWidth(3);
+            smilePaint.setStrokeCap(Paint.Cap.ROUND);
+            canvas.drawPath(mouthPath, smilePaint);
         }
 
-        // Blush
-        float blushY = eyeY + headRadius * 0.35f;
-        canvas.drawOval(new RectF(
-                headCenterX - eyeSpacing - eyeWidth * 1.2f,
-                blushY - eyeWidth * 0.3f,
-                headCenterX - eyeSpacing + eyeWidth * 0.3f,
-                blushY + eyeWidth * 0.3f
-        ), blushPaint);
-        canvas.drawOval(new RectF(
-                headCenterX + eyeSpacing - eyeWidth * 0.3f,
-                blushY - eyeWidth * 0.3f,
-                headCenterX + eyeSpacing + eyeWidth * 1.2f,
-                blushY + eyeWidth * 0.3f
-        ), blushPaint);
+        // Small nose
+        Paint nosePaint = new Paint(Paint.ANTI_ALIAS_FLAG);
+        nosePaint.setColor(Color.rgb(255, 200, 190));
+        canvas.drawCircle(0, 22, 3, nosePaint);
+    }
 
-        // Mouth (small happy smile)
-        float mouthY = headY + headRadius * 0.45f;
-        Path mouthPath = new Path();
-        mouthPath.moveTo(headCenterX - headRadius * 0.15f, mouthY);
-        mouthPath.quadTo(headCenterX, mouthY + headRadius * 0.12f,
-                headCenterX + headRadius * 0.15f, mouthY);
-        mouthPaint.setStyle(Paint.Style.STROKE);
-        mouthPaint.setStrokeWidth(3f);
-        mouthPaint.setStrokeCap(Paint.Cap.ROUND);
-        canvas.drawPath(mouthPath, mouthPaint);
+    private void drawHoodieEars(Canvas canvas) {
+        // Left hamster ear on hoodie
+        Path leftEarPath = new Path();
+        leftEarPath.moveTo(-45, -55);
+        leftEarPath.quadTo(-65, -85, -50, -95);
+        leftEarPath.quadTo(-35, -90, -35, -60);
+        leftEarPath.close();
+        canvas.drawPath(leftEarPath, hoodiePaint);
+
+        // Inner ear
+        Path leftInnerPath = new Path();
+        leftInnerPath.moveTo(-45, -60);
+        leftInnerPath.quadTo(-55, -80, -48, -85);
+        leftInnerPath.quadTo(-42, -82, -40, -65);
+        leftInnerPath.close();
+        canvas.drawPath(leftInnerPath, hoodieDetailPaint);
+
+        // Right hamster ear
+        Path rightEarPath = new Path();
+        rightEarPath.moveTo(45, -55);
+        rightEarPath.quadTo(65, -85, 50, -95);
+        rightEarPath.quadTo(35, -90, 35, -60);
+        rightEarPath.close();
+        canvas.drawPath(rightEarPath, hoodiePaint);
+
+        // Inner ear
+        Path rightInnerPath = new Path();
+        rightInnerPath.moveTo(45, -60);
+        rightInnerPath.quadTo(55, -80, 48, -85);
+        rightInnerPath.quadTo(42, -82, 40, -65);
+        rightInnerPath.close();
+        canvas.drawPath(rightInnerPath, hoodieDetailPaint);
+    }
+
+    private void drawHamsterOnHood(Canvas canvas) {
+        // Small hamster decoration on top of hood
+        float hamsterY = -70;
+
+        // Hamster body
+        canvas.drawOval(new RectF(-12, hamsterY - 8, 12, hamsterY + 12), hamsterFacePaint);
+
+        // Hamster ears
+        canvas.drawCircle(-10, hamsterY - 10, 5, hamsterFacePaint);
+        canvas.drawCircle(10, hamsterY - 10, 5, hamsterFacePaint);
+        canvas.drawCircle(-10, hamsterY - 10, 3, hoodieDetailPaint);
+        canvas.drawCircle(10, hamsterY - 10, 3, hoodieDetailPaint);
+
+        // Hamster eyes
+        canvas.drawCircle(-5, hamsterY - 2, 3, hamsterEyePaint);
+        canvas.drawCircle(5, hamsterY - 2, 3, hamsterEyePaint);
+
+        // Eye highlights
+        canvas.drawCircle(-6, hamsterY - 3, 1.2f, eyeHighlightPaint);
+        canvas.drawCircle(4, hamsterY - 3, 1.2f, eyeHighlightPaint);
+
+        // Hamster nose
+        canvas.drawCircle(0, hamsterY + 2, 2, Color.rgb(255, 150, 150) == 0 ? hamsterEyePaint : new Paint() {{
+            setColor(Color.rgb(200, 100, 100));
+            setAntiAlias(true);
+        }});
+
+        // Hamster blush
+        Paint hamsterBlush = new Paint(Paint.ANTI_ALIAS_FLAG);
+        hamsterBlush.setColor(Color.argb(80, 255, 150, 150));
+        canvas.drawCircle(-9, hamsterY + 2, 3, hamsterBlush);
+        canvas.drawCircle(9, hamsterY + 2, 3, hamsterBlush);
     }
 
     public void onShake() {
-        // Make girl react happily - trigger blink
-        blinkTimer = 3.9f;
+        isExcited = true;
+        excitedTimer = 0f;
     }
 
     @Override

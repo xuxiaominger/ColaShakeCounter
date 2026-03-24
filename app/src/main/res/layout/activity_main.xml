@@ -4,16 +4,19 @@
     android:layout_height="match_parent"
     android:background="@android:color/black">
 
+    <!-- Fullscreen cola liquid view - the main effect -->
+    <com.colashake.counter.ColaScreenView
+        android:id="@+id/colaScreenView"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent" />
+
+    <!-- Anime girl in background (bottom-left area) -->
     <com.colashake.counter.AnimeGirlView
         android:id="@+id/animeGirlView"
         android:layout_width="match_parent"
         android:layout_height="match_parent" />
 
-    <com.colashake.counter.ColaBottleView
-        android:id="@+id/colaBottleView"
-        android:layout_width="match_parent"
-        android:layout_height="match_parent" />
-
+    <!-- Counter in top-right -->
     <TextView
         android:id="@+id/counterText"
         android:layout_width="wrap_content"
